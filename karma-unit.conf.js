@@ -15,8 +15,8 @@ module.exports = function(config) {
         // list of files / patterns to load in the browser
         // TODO should just look at .bowerrc
         files: [
-            'app/components/angular/angular.js',
-            'app/components/angular-mocks/angular-mocks.js',
+            'src/main/webapp/bower_components/angular/angular.js',
+            'src/main/webapp/bower_components/angular-mocks/angular-mocks.js',
             'dist/angular-toggles.js',
             'test/unit/**/*.js'
         ],

@@ -1,106 +1,127 @@
-describe('when we are using the sales service', function() {
-  var httpBackend, Endpoints;
-  var stubRules;
+describe('when we are using the sales service', function () {
+    var httpBackend, Endpoints;
+    var stubRules;
 
-  angular.module('angularToggles.config', []).factory('Endpoints', function() {
-    return {
-      togglesConfigUrl: '/toggles.json'
-    };
-  });
-
-  beforeEach(function() {
-    module('angularToggles.services', 'angularToggles.config');
-    stubRules = { 'foo': true, 'bar': false };
-
-    inject(function($injector, _$httpBackend_, _Endpoints_) {
-      $httpBackend = $injector.get('$httpBackend');
-      Endpoints = _Endpoints_;
+    angular.module('angularToggles.config', []).factory('Endpoints', function () {
+        return {
+            togglesConfigUrl: '/toggles.json'
+        };
     });
 
-    $httpBackend.when('GET', Endpoints.togglesConfigUrl).respond(stubRules);
-  });
+    beforeEach(function () {
+        module('angularToggles.services', 'angularToggles.config');
+        stubRules = {'foo': true, 'bar': false};
 
-  it('we should go to a configured URL to get the toggles config', inject(function($injector, Endpoints, $http) {
+        inject(function ($injector, _$httpBackend_, _Endpoints_) {
+            $httpBackend = $injector.get('$httpBackend');
+            Endpoints = _Endpoints_;
+        });
 
-    Toggles = $injector.get('Toggles');
-    var ruleName = 'foo';
+        $httpBackend.when('GET', Endpoints.togglesConfigUrl).respond(stubRules);
+    });
 
-    var resolution = jasmine.createSpy('resolve');
-    var rejection = jasmine.createSpy('reject');
+    it('we should go to a configured URL to get the toggles config', inject(function ($injector, Endpoints, $http) {
 
-    Toggles.resolveRule(ruleName).then(resolution, rejection);
-    $httpBackend.flush();
+        Toggles = $injector.get('Toggles');
+        var ruleName = 'foo';
 
-    var $rootScope = $injector.get('$rootScope');
-    $rootScope.$apply();
-    expect(resolution).toHaveBeenCalled();
-    expect(rejection).not.toHaveBeenCalled();
+        var resolution = jasmine.createSpy('resolve');
+        var rejection = jasmine.createSpy('reject');
 
-  }));
+        $httpBackend.expectGET('/toggles.json');
+        Toggles.resolveRule(ruleName).then(resolution, rejection);
+        $httpBackend.flush();
 
-  it('we should return that the feature is enabled when the toggle is true', inject(function($injector, $rootScope) {
-    var rules = stubRules;
+        var $rootScope = $injector.get('$rootScope');
+        $rootScope.$apply();
+        expect(resolution).toHaveBeenCalled();
+        expect(rejection).not.toHaveBeenCalled();
 
-    var Toggles = $injector.get('Toggles');
+        Toggles.resolveRule(ruleName).then(resolution, rejection);
+        // if we did this right, this should pass
+        $httpBackend.verifyNoOutstandingRequest();
+    }));
 
-    var ruleName = 'foo';
+    it("we should cache the the results from the server when the service is subsequently callled", inject(function($injector, $rootScope) {
+        Toggles = $injector.get('Toggles');
+        var ruleName = 'foo';
 
-    var resolution = jasmine.createSpy('resolve');
-    var rejection = jasmine.createSpy('reject');
+        var resolution = jasmine.createSpy('resolve');
+        var rejection = jasmine.createSpy('reject');
 
-    Toggles.resolveRule(ruleName).then(resolution, rejection);
-    $httpBackend.flush();
+        Toggles.resolveRule(ruleName).then(resolution, rejection);
+        $httpBackend.flush();
 
-    $rootScope.$apply();
+        var $rootScope = $injector.get('$rootScope');
+        $rootScope.$apply();
+        expect(resolution).toHaveBeenCalled();
+        expect(rejection).not.toHaveBeenCalled();
 
-    expect(resolution).toHaveBeenCalled();
-    expect(rejection).not.toHaveBeenCalled();
+    }));
 
-  }));
+    it('we should return that the feature is enabled when the toggle is true', inject(function ($injector, $rootScope) {
+        var rules = stubRules;
 
-  it('we should return that the feature is disabled when the toggle is false', inject(function($injector, $rootScope) {
-    var rules = stubRules;
+        var Toggles = $injector.get('Toggles');
 
-    var Toggles = $injector.get('Toggles');
+        var ruleName = 'foo';
 
-    var ruleName = 'bar';
+        var resolution = jasmine.createSpy('resolve');
+        var rejection = jasmine.createSpy('reject');
 
-    var resolution = jasmine.createSpy('resolve');
-    var rejection = jasmine.createSpy('reject');
+        Toggles.resolveRule(ruleName).then(resolution, rejection);
+        $httpBackend.flush();
 
-    Toggles.resolveRule(ruleName).then(resolution, rejection);
-    $httpBackend.flush();
+        $rootScope.$apply();
 
-    $rootScope.$apply();
+        expect(resolution).toHaveBeenCalled();
+        expect(rejection).not.toHaveBeenCalled();
 
-    expect(resolution).not.toHaveBeenCalled();
-    expect(rejection).toHaveBeenCalled();
+    }));
+
+    it('we should return that the feature is disabled when the toggle is false', inject(function ($injector, $rootScope) {
+        var rules = stubRules;
+
+        var Toggles = $injector.get('Toggles');
+
+        var ruleName = 'bar';
+
+        var resolution = jasmine.createSpy('resolve');
+        var rejection = jasmine.createSpy('reject');
+
+        Toggles.resolveRule(ruleName).then(resolution, rejection);
+        $httpBackend.flush();
+
+        $rootScope.$apply();
+
+        expect(resolution).not.toHaveBeenCalled();
+        expect(rejection).toHaveBeenCalled();
 
 
-  }));
+    }));
 
-  it('we should return that the feature is enabled is the toggle is not configured', inject(function($injector, $rootScope) {
-    var rules = stubRules;
+    it('we should return that the feature is enabled is the toggle is not configured', inject(function ($injector, $rootScope) {
+        var rules = stubRules;
 
-    var ruleName = 'zoo';
+        var ruleName = 'zoo';
 
-    var Toggles = $injector.get('Toggles');
+        var Toggles = $injector.get('Toggles');
 
-    var resolution = jasmine.createSpy('resolve');
-    var rejection = jasmine.createSpy('reject');
+        var resolution = jasmine.createSpy('resolve');
+        var rejection = jasmine.createSpy('reject');
 
-    Toggles.resolveRule(ruleName).then(resolution, rejection);
-    $httpBackend.flush();
+        Toggles.resolveRule(ruleName).then(resolution, rejection);
+        $httpBackend.flush();
 
-    $rootScope.$apply();
+        $rootScope.$apply();
 
-    expect(resolution).toHaveBeenCalled();
-    expect(rejection).not.toHaveBeenCalled();
+        expect(resolution).toHaveBeenCalled();
+        expect(rejection).not.toHaveBeenCalled();
 
-  }));
+    }));
 
-  afterEach(inject(function($httpBackend) {
-    $httpBackend.verifyNoOutstandingExpectation();
-    $httpBackend.verifyNoOutstandingRequest();
-  }));
+    afterEach(inject(function ($httpBackend) {
+        $httpBackend.verifyNoOutstandingExpectation();
+        $httpBackend.verifyNoOutstandingRequest();
+    }));
 });

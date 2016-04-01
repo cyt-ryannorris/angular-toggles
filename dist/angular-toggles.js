@@ -41,22 +41,43 @@ angular.module('angularToggles.directives')
 });
 
 angular.module('angularToggles.services')
-.factory('Toggles', function($http, Endpoints, $q) {
-  return {
-    resolveRule: function(name) {
-      var deferred = $q.defer();
+    .factory('Toggles', function ($http, Endpoints, $q) {
 
-      $http.get(Endpoints.togglesConfigUrl)
-      .success(function(data, status,  headers) {
-        var resolution = data[name] || false;
-        if(data[name] === false) {
-          deferred.reject();
-        } else {
-          deferred.resolve();
+        var rules = {};
+        var cached = false;
+
+        function resolve(deferred, name) {
+            var resolution = rules[name] || false;
+            if (rules[name] === false) {
+                deferred.reject();
+            } else {
+                deferred.resolve();
+            }
         }
-      });
 
-      return deferred.promise;
-    }
-  };
-});
+        return {
+            resolveRule: function (name) {
+                var deferred = $q.defer();
+
+                /* if the data has already been fetched, we should just store that locally
+                 */
+
+                if (cached) {
+                    console.log("cache hit!");
+                    resolve(deferred, name);
+                } else {
+                    // load and cache the rules
+                    console.log("cache not hit!");
+
+                    $http.get(Endpoints.togglesConfigUrl)
+                        .success(function (data, status, headers) {
+                            cached = true;
+                            rules = data;
+                            resolve(deferred, name);
+                        });
+                }
+
+                return deferred.promise;
+            }
+        };
+    });
